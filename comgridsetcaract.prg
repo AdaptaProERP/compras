@@ -38,6 +38,12 @@ PROCE MAIN(oGrid)
 
    ENDIF
 
+   // Busca los Items, INV_CODCAR // Codigo de Características
+   IF !Empty(aItem) .AND. ISTABINC("DPINVCARACTERISTICAS")
+      AADD(aItem,"-Agregar")
+   ENDIF
+
+   oGrid:aItems_nomcar:=ACLONE(aItem)
    oCol:=EJECUTAR("GRIDSETITEM",oGrid,"MOV_NOMCAR",aItem)
 
 RETURN .T.

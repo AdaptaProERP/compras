@@ -21,7 +21,7 @@ PROCE MAIN(oGrid)
 
    aItem:=ATABLE(cSql)
 
-   IF Empty(aTipCar)
+   IF Empty(aItem)
       // Busca sin Proveedor
       cWhere:="INC_CODIGO"+GetWhere("=",oGrid:MOV_CODIGO)
  
@@ -33,7 +33,15 @@ PROCE MAIN(oGrid)
 
    ENDIF
 
-   oCol:=EJECUTAR("GRIDSETITEM",oGrid,"MOV_TIPCAR",aItem)
+   IF !Empty(aItem)
+      AADD(aItem,"-Agregar")
+   ENDIF
+
+   oGrid:aItems_tipcar:=ACLONE(aItem)
+
+   IF !Empty(aItem)
+     oCol:=EJECUTAR("GRIDSETITEM",oGrid,"MOV_TIPCAR",aItem)
+   ENDIF
 
    EJECUTAR("COMGRIDSETCARACT",oGrid)
 
