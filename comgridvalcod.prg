@@ -25,29 +25,6 @@ PROCE MAIN(oGrid)
       RETURN .F.
    ENDIF
  
-/*
-   oColL:=oGrid:GetCol("MOV_NOMCAR",.F.)
-   
-   // Apaga el COMBOBOX
-   IF ValType(oColL)="O"
-     oGrid:oBrw:aCols[oColL:nCol]:aEditListTxt  :=NIL
-     oGrid:oBrw:aCols[oColL:nCol]:aEditListBound:=NIL
-     oGrid:oBrw:aCols[oColL:nCol]:nEditType     :=1
-     oColL:bWhen:={||.T.}
-     oGrid:SET("MOV_NOMCAR",SPACE(LEN(oGrid:MOV_NOMCAR)),.T.)
-   ENDIF
-
-   oColL:=oGrid:GetCol("MOV_TIPCAR",.F.)
-   
-   // Apaga el COMBOBOX
-   IF ValType(oColL)="O"
-     oGrid:oBrw:aCols[oColL:nCol]:aEditListTxt  :=NIL
-     oGrid:oBrw:aCols[oColL:nCol]:aEditListBound:=NIL
-     oGrid:oBrw:aCols[oColL:nCol]:nEditType     :=1
-     oColL:bWhen:={||.T.}
-     oGrid:SET("MOV_TIPCAR",SPACE(LEN(oGrid:MOV_TIPCAR)),.T.)
-   ENDIF
-*/
 
    cCod:=ALLTRIM(oGrid:MOV_CODIGO)
 
@@ -187,7 +164,7 @@ PROCE MAIN(oGrid)
 
 // ? oGrid:ClassName()
 
-     EJECUTAR("VTAGRIDPRECIO",oGrid,.T.)
+     // 16/01/2024 , SOLO APLICA CUANDO SE FACTURA EJECUTAR("VTAGRIDPRECIO",oGrid,.T.)
 
    ENDIF
 
@@ -200,7 +177,7 @@ FUNCTION VTAGRIDCODINV(oGrid)
    LOCAL oDoc   :=oGrid:oHead
    LOCAL cZonaNL:=oDoc:cZonaNL
    LOCAL nCol   :=3 // IIF(!cZonaNL="N",5,3) // Col=3 (Compras)
-   LOCAL cTipIva
+   LOCAL cTipIva,oInv
 
 // ? oDoc:cZonaNL,"oDoc:cZonaNL"
 
@@ -210,13 +187,22 @@ FUNCTION VTAGRIDCODINV(oGrid)
 
    oGrid:cEditar:="N"
 
-   cCodInv:=SQLGET("DPINV","INV_CODIGO,INV_METCOS,INV_EDITAR,INV_DESCRI,INV_TALLAS,INV_PREREG,INV_PVPORG,INV_IVA","INV_CODIGO"+GetWhere("=",oGrid:MOV_CODIGO))
-   aRow   :=ACLONE(oDp:aRow)
+   oInv:=OpenTable("SELECT * FROM DPINV WHERE INV_CODIGO"+GetWhere("=",oGrid:MOV_CODIGO),.T.)
+
+   // 02/01/2024 Pasamos todos los campos para no tener necesidad de releerlo.
+   AEVAL(oInv:aFields,{|a,n| oGrid:Set(a[1],oInv:FieldGet(n))})
+   cCodInv:=oGrid:MOV_CODIGO
+   
+// cCodInv:=SQLGET("DPINV","INV_CODIGO,INV_METCOS,INV_EDITAR,INV_DESCRI,INV_TALLAS,INV_PREREG,INV_PVPORG,INV_IVA","INV_CODIGO"+GetWhere("=",oGrid:MOV_CODIGO))
+// aRow   :=ACLONE(oDp:aRow)
+
+   aRow   :={oInv:INV_CODIGO,oInv:INV_METCOS,oInv:INV_EDITAR,oInv:INV_DESCRI,oInv:INV_TALLAS,oInv:INV_PREREG,oInv:INV_PVPORG,oInv:INV_IVA}
 
 // IF !(SQLGET("DPINV","INV_CODIGO","INV_CODIGO"+GetWhere("=",oGrid:MOV_CODIGO))==oGrid:MOV_CODIGO)
 
    IF Empty(cCodInv) 
 
+      oInv:End(.T.)
       // BUSCA EL EQUIVALENTE
       cEquiv:=SQLGET("DPEQUIV","EQUI_CODIG,EQUI_MED","EQUI_BARRA"+GetWhere("=",oGrid:MOV_CODIGO))
 
@@ -288,9 +274,12 @@ FUNCTION VTAGRIDCODINV(oGrid)
      oGrid:MOV_IMPOTR:=EJECUTAR("IVACAL",cTipIva,6   ,oDoc:DOC_FECHA) // OTROS IMPUESTOS
 
 // ? oGrid:MOV_IVA,"oGrid:MOV_IVA",cTipIva,nCol,oDoc:DOC_FECHA
-
      oGrid:Set("MOV_IVA",oGrid:MOV_IVA,.T.)
+
+// ? oGrid:MOV_IVA,"IVA"
    ENDIF
+
+   oInv:End(.T.)
 
   // EJECUTAR("VTAGRIDCOSTO" ,oGrid) // Determina el Costo
 

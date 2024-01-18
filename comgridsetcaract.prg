@@ -11,40 +11,59 @@
 PROCE MAIN(oGrid)
    LOCAL oDoc,oCol,cWhere,aNomCar,cSql,aItem
 
-   IF oGrid=NIL
-      RETURN .F.
+   IF oGrid=NIL .OR. oGrid:nOption=0 .OR. Empty(oGrid:INV_CODCAR)
+      RETURN {}
    ENDIF
 
-   cWhere:="INC_CODPRO"+GetWhere("=",oDoc:DOC_CODIGO )+" AND "+;
-           "INC_CODIGO"+GetWhere("=",oGrid:MOV_CODIGO)+" AND "+;
-           "INC_TIPO  "+GetWhere("=",oGrid:MOV_TIPCAR)
+   // No tiene características por producto, esto fue leido en COMGRIDSETTIPCAR
 
-   cSql :=" SELECT INC_DESCRI FROM DPINVCARACTERISTICAS "+;
-          " WHERE "+cWhere+;
-          " GROUP BY INC_DESCRI "
+   IF !oGrid:lLeeInvCar
 
-   aItem:=ATABLE(cSql)
+      // Busca en Grupo de Características por Grupo
 
-   IF Empty(aItem)
+      cWhere:="GCD_CODGRU"+GetWhere("=",oGrid:INV_CODCAR)+" AND "+;
+              "GCD_TIPO  "+GetWhere("=",oGrid:MOV_TIPCAR)
 
-      cWhere:="INC_CODIGO"+GetWhere("=",oGrid:MOV_CODIGO)+" AND "+;
-              "INC_TIPO  "+GetWhere("=",oGrid:MOV_TIPCAR)
-
-      cSql:=" SELECT INC_DESCRI FROM DPINVCARACTERISTICAS "+;
-            " WHERE "+cWhere+;
-            " GROUP BY INC_DESCRI "
+      cSql  :=" SELECT GCD_DESCRI FROM DPGRUCARACTDET "+;
+              " WHERE "+cWhere+;
+              " GROUP BY GCD_DESCRI "
 
       aItem:=ATABLE(cSql)
 
-   ENDIF
+   ELSE
 
-   // Busca los Items, INV_CODCAR // Codigo de Características
-   IF !Empty(aItem) .AND. ISTABINC("DPINVCARACTERISTICAS")
-      AADD(aItem,"-Agregar")
-   ENDIF
+      cWhere:="INC_CODPRO"+GetWhere("=",oDoc:DOC_CODIGO )+" AND "+;
+              "INC_CODIGO"+GetWhere("=",oGrid:MOV_CODIGO)+" AND "+;
+              "INC_TIPO  "+GetWhere("=",oGrid:MOV_TIPCAR)
 
-   oGrid:aItems_nomcar:=ACLONE(aItem)
-   oCol:=EJECUTAR("GRIDSETITEM",oGrid,"MOV_NOMCAR",aItem)
+      cSql :=" SELECT INC_DESCRI FROM DPINVCARACTERISTICAS "+;
+             " WHERE "+cWhere+;
+             " GROUP BY INC_DESCRI " 
+
+      aItem:=ATABLE(cSql)
+
+      IF Empty(aItem)
+
+        cWhere:="INC_CODIGO"+GetWhere("=",oGrid:MOV_CODIGO)+" AND "+;
+                "INC_TIPO  "+GetWhere("=",oGrid:MOV_TIPCAR)
+
+        cSql  :=" SELECT INC_DESCRI FROM DPINVCARACTERISTICAS "+;
+                " WHERE "+cWhere+;
+                " GROUP BY INC_DESCRI "
+
+        aItem:=ATABLE(cSql)
+
+       ENDIF
+
+    ENDIF
+
+    // Busca los Items, INV_CODCAR // Codigo de Características
+    IF !Empty(aItem) .AND. ISTABINC("DPINVCARACTERISTICAS")
+       AADD(aItem,"-Agregar")
+    ENDIF
+
+    oGrid:aItems_nomcar:=ACLONE(aItem)
+    oCol:=EJECUTAR("GRIDSETITEM",oGrid,"MOV_NOMCAR",aItem)
 
 RETURN .T.
 // EOF

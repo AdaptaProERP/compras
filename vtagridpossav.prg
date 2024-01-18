@@ -204,7 +204,7 @@ PROCE MAIN(oGrid)
  // ? oGrid:MOV_CODALM,Grid:oHead:cCodAlm,"POST-GRABAR"
  // 16/01/2024, Creará el registro en tabla DPINVCARACTERISTICAS, CASO QUE NO EXISTE Y SEA INCLUIDO POR EL USUARIO
 
- IF !Empty(oGrid:MOV_NOMCAR+oGrid:MOV_TIPCAR) .AND.  !ISSQLFIND("DPINVCARACTERISTICAS","INC_TIPO"+GetWhere("=",oGrid:MOV_TIPCAR)+" AND INC_DESCRI"+GetWhere("=",oGrid:MOV_NOMCAR))
+ IF oGrid:lLeeInvCar .AND. !Empty(oGrid:MOV_NOMCAR+oGrid:MOV_TIPCAR) .AND.  !ISSQLFIND("DPINVCARACTERISTICAS","INC_TIPO"+GetWhere("=",oGrid:MOV_TIPCAR)+" AND INC_DESCRI"+GetWhere("=",oGrid:MOV_NOMCAR))
 
     oTable:=OpenTable("SELECT * FROM DPINVCARACTERISTICAS",.F.)
     oTable:AppendBlank()
@@ -212,6 +212,22 @@ PROCE MAIN(oGrid)
     oTable:Replace("INC_CODMON",oGrid:oHead:DOC_CODMON)
     oTable:Replace("INC_DESCRI",oGrid:MOV_NOMCAR)
     oTable:Replace("INC_TIPO"  ,oGrid:MOV_TIPCAR)
+    oTable:Commit("")
+    oTable:End()
+
+ ENDIF
+
+ // AGREGAR EN GRUPOS 
+
+ IF !oGrid:lLeeInvCar .AND. !Empty(oGrid:MOV_NOMCAR+oGrid:MOV_TIPCAR) .AND.;
+    !ISSQLFIND("DPGRUCARACTDET","GCD_CODGRU"+GetWhere("=",oGrid:INV_CODCAR)+" AND GCD_TIPO  "+GetWhere("=",oGrid:MOV_TIPCAR)+" AND GCD_DESCRI"+GetWhere("=",oGrid:MOV_NOMCAR))
+
+    oTable:=OpenTable("SELECT * FROM DPGRUCARACTDET",.F.)
+    oTable:AppendBlank()
+    oTable:Replace("GCD_CODGRU" ,oGrid:INV_CODCAR)
+    oTable:Replace("GCDC_CODMON",oGrid:oHead:DOC_CODMON)
+    oTable:Replace("GCD_DESCRI" ,oGrid:MOV_NOMCAR)
+    oTable:Replace("GCD_TIPO"   ,oGrid:MOV_TIPCAR)
     oTable:Commit("")
     oTable:End()
 
